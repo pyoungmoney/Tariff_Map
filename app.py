@@ -21,6 +21,7 @@ This interactive map visualizes US import data (2024) and tariff rates from the 
   - China is shaded red
   - United States is shaded blue
   - Geopolitical swing states are shaded purple
+            
 Use the filters in the sidebar to explore different aspects of the US import data:
 - Filter by specific countries
 - Filter by import value range
@@ -544,25 +545,3 @@ with st.spinner("Generating map... This may take a moment."):
 # Display data table
 st.subheader("US Import Data")
 st.dataframe(df, use_container_width=True)
-
-# Add information about the visualization
-st.markdown("""
-### About this Visualization
-
-This interactive map visualizes US import data and tariff rates for countries around the world:
-
-- **Bubble size**: Represents the total imports from each country (larger bubble = higher import value)
-- **Bubble color**: Represents the tariff rate using the "Hot" colorscale (yellow to red, with darker red indicating higher tariff rates)
-- **Country shading**: 
-  - China is shaded red
-  - United States is shaded blue
-  - Geopolitical swing states are shaded purple
-
-Use the filters in the sidebar to explore different aspects of the US import data:
-- Filter by specific countries
-- Filter by import value range
-- Filter by tariff rate range
-- **Highlight Geopolitical Swing States**: When checked, this makes geopolitical swing states stand out by turning non-swing states gray
-
-Hover over bubbles to see detailed information about each country, including the exact import value (in billions of USD), tariff rate, and geopolitical swing state status.
-""")
