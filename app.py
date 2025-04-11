@@ -325,10 +325,10 @@ def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, se
         # Calculate bubble size based on import value (logarithmic scale for better visualization)
         # Handle very small values
         if imports < 1:
-            bubble_size = 3
+            bubble_size = 5
         else:
             # Use log scale for better visualization of wide range of values
-            bubble_size = 3 + 12 * np.log10(imports)
+            bubble_size = 5 + 15 * np.log10(imports)
         
         hover_text = (
             f"Country: {country_name}<br>" +
