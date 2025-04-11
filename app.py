@@ -349,9 +349,9 @@ def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, se
         marker=dict(
             size=sizes,
             color=tariff_rates,  # Use tariff rates for color mapping
-            colorscale='Hot',    # Use the "Hot" colorscale
+            colorscale='Hot_r',  # Use the reversed "Hot" colorscale so darker colors = higher values
             cmin=min_tariff,     # Set color scale minimum
-            cmax=max_tariff,     # Set color scale maximum
+            cmax=50,             # Cap the color scale at 50% (values above 50% will have the same color as 50%)
             showscale=True,      # Ensure the colorscale is shown
             colorbar=dict(
                 title="Tariff Rate (%)",
