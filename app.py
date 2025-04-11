@@ -295,17 +295,15 @@ def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, se
     # Create figure
     fig = go.Figure()
     
-    # Add base map
-    fig.add_trace(go.Scattergeo(
-        lon=[],
-        lat=[],
-        mode='markers',
-        marker=dict(size=1, color='white'),
-        showlegend=False,
-        hoverinfo='none'
-    ))
+    # Prepare data for a single trace with all bubbles
+    lons = []
+    lats = []
+    sizes = []
+    tariff_rates = []
+    hover_texts = []
+    country_names = []
     
-    # Add bubbles for each country
+    # Process each country
     for _, row in filtered_df.iterrows():
         country_name = row['CTYNAME']
         imports = row['Imports ($B)']
@@ -331,32 +329,43 @@ def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, se
             # Use log scale for better visualization of wide range of values
             bubble_size = 3 + 12 * np.log10(imports)
         
-        # Add the bubble
-        fig.add_trace(go.Scattergeo(
-            lon=[lon],
-            lat=[lat],
-            mode='markers',
-            marker=dict(
-                size=bubble_size,
-                color=tariff_rate,  # Use tariff rate directly for color mapping
-                colorscale='Hot',   # Use the "Hot" colorscale
-                cmin=min_tariff,    # Set color scale minimum
-                cmax=max_tariff,    # Set color scale maximum
-                colorbar=dict(
-                    title="Tariff Rate (%)",
-                    thickness=15,
-                    len=0.5,
-                    y=0.5
-                ),
-                opacity=0.7,
-                line=dict(width=1, color='black')
+        # Add data to arrays
+        lons.append(lon)
+        lats.append(lat)
+        sizes.append(bubble_size)
+        tariff_rates.append(tariff_rate)
+        country_names.append(country_name)
+        hover_texts.append(
+            f"Country: {country_name}<br>" +
+            f"Imports: ${imports:,.2f} Billion<br>" +
+            f"Tariff Rate: {tariff_rate}%"
+        )
+    
+    # Add all bubbles as a single trace
+    fig.add_trace(go.Scattergeo(
+        lon=lons,
+        lat=lats,
+        mode='markers',
+        marker=dict(
+            size=sizes,
+            color=tariff_rates,  # Use tariff rates for color mapping
+            colorscale='Hot',    # Use the "Hot" colorscale
+            cmin=min_tariff,     # Set color scale minimum
+            cmax=max_tariff,     # Set color scale maximum
+            showscale=True,      # Ensure the colorscale is shown
+            colorbar=dict(
+                title="Tariff Rate (%)",
+                thickness=15,
+                len=0.5,
+                y=0.5
             ),
-            name=country_name,
-            hoverinfo='text',
-            hovertext=f"Country: {country_name}<br>" +
-                      f"Imports: ${imports:,.2f} Billion<br>" +
-                      f"Tariff Rate: {tariff_rate}%"
-        ))
+            opacity=0.7,
+            line=dict(width=1, color='black')
+        ),
+        text=country_names,
+        hoverinfo='text',
+        hovertext=hover_texts
+    ))
     
     # Update layout
     fig.update_layout(
