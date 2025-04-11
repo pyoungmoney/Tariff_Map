@@ -12,13 +12,22 @@ st.set_page_config(
 )
 
 # Title and description
-st.title("US Import and Tariff Visualization")
+st.title("US Imports and Liberation Day Tariff Rates")
 st.markdown("""
-This interactive map visualizes US import data and tariff rates for countries around the world:
-- **Bubble size**: Represents the total imports from each country (larger bubble = higher import value)
-- **Bubble color**: Represents the tariff rate using the "Hot" colorscale (yellow to red, with darker red indicating higher tariff rates)
-- **Star shape**: Indicates a geopolitical swing state
-- **Country shading**: China is shaded red and the United States is shaded blue
+This interactive map visualizes US import data (2024) and tariff rates from the Liberation Day announcement for countries around the world:
+- **Bubble size**: Represents the total imports into the US from each country  (larger bubble = higher import value)
+- **Bubble color**: Represents the proposed tariff rate
+- **Country shading**: 
+  - China is shaded red
+  - United States is shaded blue
+  - Geopolitical swing states are shaded purple
+Use the filters in the sidebar to explore different aspects of the US import data:
+- Filter by specific countries
+- Filter by import value range
+- Filter by tariff rate range
+- **Highlight Geopolitical Swing States**: When checked, this makes geopolitical swing states stand out by turning non-swing states gray
+
+Hover over bubbles to see detailed information about each country, including the exact import value (in billions of USD), tariff rate, and geopolitical swing state status.
 """)
 
 # Load the data
@@ -278,7 +287,7 @@ country_coords = {
 }
 
 # Function to create the bubble map visualization
-def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, selected_countries):
+def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, selected_countries, highlight_swing_states=False):
     # Filter data based on selections
     filtered_df = data.copy()
     
@@ -360,12 +369,52 @@ def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, se
             regular_country_names.append(country_name)
             regular_hover_texts.append(hover_text)
     
-    # Add special choropleth for China (red) and United States (blue)
+    # Prepare country codes for choropleth
+    # Get ISO3 codes for swing states (excluding China and USA which have special colors)
+    swing_country_iso3 = []
+    for country in swing_country_names:
+        if country == 'China' or country == 'United States':
+            continue
+        
+        # Map country names to ISO3 codes (simplified mapping for demonstration)
+        # In a real application, you would use a more comprehensive mapping
+        iso3 = None
+        if country == 'Vietnam': iso3 = 'VNM'
+        elif country == 'Bangladesh': iso3 = 'BGD'
+        elif country == 'India': iso3 = 'IND'
+        elif country == 'Indonesia': iso3 = 'IDN'
+        elif country == 'Singapore': iso3 = 'SGP'
+        elif country == 'Sweden': iso3 = 'SWE'
+        elif country == 'France': iso3 = 'FRA'
+        elif country == 'Germany': iso3 = 'DEU'
+        elif country == 'Netherlands': iso3 = 'NLD'
+        elif country == 'Norway': iso3 = 'NOR'
+        elif country == 'Kuwait': iso3 = 'KWT'
+        elif country == 'Qatar': iso3 = 'QAT'
+        elif country == 'Saudi Arabia': iso3 = 'SAU'
+        elif country == 'United Arab Emirates': iso3 = 'ARE'
+        elif country == 'Australia': iso3 = 'AUS'
+        elif country == 'Japan': iso3 = 'JPN'
+        elif country == 'South Korea': iso3 = 'KOR'
+        elif country == 'Taiwan': iso3 = 'TWN'
+        elif country == 'Mexico': iso3 = 'MEX'
+        elif country == 'Brazil': iso3 = 'BRA'
+        elif country == 'Chile': iso3 = 'CHL'
+        elif country == 'Morocco': iso3 = 'MAR'
+        
+        if iso3:
+            swing_country_iso3.append(iso3)
+    
+    # Add special choropleth for China (red), United States (blue), and swing states (purple)
     fig.add_trace(go.Choropleth(
-        locations=['CHN', 'USA'],
-        z=[1, 2],  # Different values for different colors
-        text=['China', 'United States'],
-        colorscale=[[0, 'rgb(220,20,60)'], [1, 'rgb(30,144,255)']],  # Red for China, Blue for USA
+        locations=['CHN', 'USA'] + swing_country_iso3,
+        z=[1, 2] + [3] * len(swing_country_iso3),  # Different values for different colors
+        text=['China', 'United States'] + swing_country_names,
+        colorscale=[
+            [0, 'rgb(220,20,60)'],    # Red for China (z=1)
+            [0.5, 'rgb(30,144,255)'], # Blue for USA (z=2)
+            [1, 'rgb(128,0,128)']     # Purple for swing states (z=3)
+        ],
         showscale=False,
         marker_line_color='darkgray',
         marker_line_width=0.5,
@@ -373,25 +422,25 @@ def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, se
         hoverinfo='skip'
     ))
     
-    # Add regular bubbles
+    # Add regular bubbles (gray if highlight_swing_states is enabled)
     fig.add_trace(go.Scattergeo(
         lon=regular_lons,
         lat=regular_lats,
         mode='markers',
         marker=dict(
             size=regular_sizes,
-            color=regular_tariff_rates,  # Use tariff rates for color mapping
-            colorscale='Hot_r',  # Use the reversed "Hot" colorscale so darker colors = higher values
-            cmin=min_tariff,     # Set color scale minimum
-            cmax=50,             # Cap the color scale at 50% (values above 50% will have the same color as 50%)
-            showscale=True,      # Ensure the colorscale is shown
+            color='rgb(180,180,180)' if highlight_swing_states else regular_tariff_rates,  # Gray if highlighting swing states
+            colorscale='Hot_r' if not highlight_swing_states else None,  # Use the reversed "Hot" colorscale only if not highlighting
+            cmin=min_tariff if not highlight_swing_states else None,
+            cmax=50 if not highlight_swing_states else None,
+            showscale=not highlight_swing_states,  # Only show colorscale if not highlighting
             colorbar=dict(
                 title="Tariff Rate (%)",
                 thickness=15,
                 len=0.5,
                 y=0.5
-            ),
-            opacity=0.7,
+            ) if not highlight_swing_states else None,
+            opacity=0.5 if highlight_swing_states else 0.7,  # Lower opacity if highlighting swing states
             line=dict(width=1, color='black')
         ),
         text=regular_country_names,
@@ -400,7 +449,7 @@ def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, se
         name='Regular Countries'
     ))
     
-    # Add star-shaped markers for geopolitical swing states
+    # Add markers for geopolitical swing states (using hot colorscale like regular bubbles)
     fig.add_trace(go.Scattergeo(
         lon=swing_lons,
         lat=swing_lats,
@@ -411,9 +460,8 @@ def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, se
             colorscale='Hot_r',  # Use the reversed "Hot" colorscale
             cmin=min_tariff,
             cmax=50,
-            showscale=False,
+            showscale=False,  # Don't show a second colorscale
             opacity=0.7,
-            symbol='star',
             line=dict(width=1, color='black')
         ),
         text=swing_country_names,
@@ -463,6 +511,9 @@ selected_countries = st.sidebar.multiselect(
     default=[]
 )
 
+# Geopolitical swing state filter
+highlight_swing_states = st.sidebar.checkbox("Highlight Geopolitical Swing States", value=False)
+
 # Import value range filter
 min_imports = float(df['Imports ($B)'].min())
 max_imports = float(df['Imports ($B)'].max())
@@ -487,7 +538,7 @@ tariff_range = st.sidebar.slider(
 
 # Create and display the map
 with st.spinner("Generating map... This may take a moment."):
-    map_fig = create_bubble_map(df, import_range[0], import_range[1], tariff_range[0], tariff_range[1], selected_countries)
+    map_fig = create_bubble_map(df, import_range[0], import_range[1], tariff_range[0], tariff_range[1], selected_countries, highlight_swing_states)
     st.plotly_chart(map_fig, use_container_width=True)
 
 # Display data table
@@ -502,13 +553,16 @@ This interactive map visualizes US import data and tariff rates for countries ar
 
 - **Bubble size**: Represents the total imports from each country (larger bubble = higher import value)
 - **Bubble color**: Represents the tariff rate using the "Hot" colorscale (yellow to red, with darker red indicating higher tariff rates)
-- **Star shape**: Indicates a geopolitical swing state
-- **Country shading**: China is shaded red and the United States is shaded blue
+- **Country shading**: 
+  - China is shaded red
+  - United States is shaded blue
+  - Geopolitical swing states are shaded purple
 
 Use the filters in the sidebar to explore different aspects of the US import data:
 - Filter by specific countries
 - Filter by import value range
 - Filter by tariff rate range
+- **Highlight Geopolitical Swing States**: When checked, this makes geopolitical swing states stand out by turning non-swing states gray
 
 Hover over bubbles to see detailed information about each country, including the exact import value (in billions of USD), tariff rate, and geopolitical swing state status.
 """)
