@@ -326,9 +326,13 @@ def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, se
         # Handle very small values
         if imports < 1:
             bubble_size = 5
+        elif imports <10:
+            bubble_size = 10
+        elif imports < 100:
+            bubble_size = 20
         else:
             # Use log scale for better visualization of wide range of values
-            bubble_size = 5 + 15 * np.log10(imports)
+            bubble_size = 5 + 8 * np.log2(imports)
         
         hover_text = (
             f"Country: {country_name}<br>" +
