@@ -13,23 +13,6 @@ st.set_page_config(
 
 # Title and description
 st.title("US Imports and Liberation Day Tariff Rates")
-st.markdown("""
-This interactive map visualizes US import data (2024) and tariff rates from the Liberation Day announcement for countries around the world:
-- **Bubble size**: Represents the total imports into the US from each country  (larger bubble = higher import value)
-- **Bubble color**: Represents the proposed tariff rate
-- **Country shading**: 
-  - China is shaded red
-  - United States is shaded blue
-  - Geopolitical swing states are shaded purple
-            
-Use the filters in the sidebar to explore different aspects of the US import data:
-- Filter by specific countries
-- Filter by import value range
-- Filter by tariff rate range
-- **Highlight Geopolitical Swing States**: When checked, this makes geopolitical swing states stand out by turning non-swing states gray
-
-Hover over bubbles to see detailed information about each country, including the exact import value (in billions of USD), tariff rate, and geopolitical swing state status.
-""")
 
 # Load the data
 @st.cache_data
@@ -423,26 +406,28 @@ def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, se
         hoverinfo='skip'
     ))
     
-    # Add regular bubbles (gray if highlight_swing_states is enabled)
-    fig.add_trace(go.Scattergeo(
-        lon=regular_lons,
-        lat=regular_lats,
-        mode='markers',
-        marker=dict(
-            size=regular_sizes,
-            color='rgb(180,180,180)' if highlight_swing_states else regular_tariff_rates,  # Gray if highlighting swing states
-            colorscale='Hot_r' if not highlight_swing_states else None,  # Use the reversed "Hot" colorscale only if not highlighting
-            cmin=min_tariff if not highlight_swing_states else None,
-            cmax=50 if not highlight_swing_states else None,
-            showscale=False,  # Don't show colorscale for regular bubbles
-            opacity=0.5 if highlight_swing_states else 0.7,  # Lower opacity if highlighting swing states
-            line=dict(width=1, color='black')
-        ),
-        text=regular_country_names,
-        hoverinfo='text',
-        hovertext=regular_hover_texts,
-        name='Regular Countries'
-    ))
+    # Add regular bubbles (invisible if highlight_swing_states is enabled)
+    if not highlight_swing_states or len(regular_lons) > 0:  # Only add if not highlighting or if there are regular countries
+        fig.add_trace(go.Scattergeo(
+            lon=regular_lons,
+            lat=regular_lats,
+            mode='markers',
+            marker=dict(
+                size=regular_sizes,
+                color=regular_tariff_rates,  # Always use tariff rates for color
+                colorscale='Hot_r',  # Always use the reversed "Hot" colorscale
+                cmin=min_tariff,
+                cmax=50,
+                showscale=False,  # Don't show colorscale for regular bubbles
+                opacity=0 if highlight_swing_states else 0.7,  # Make invisible if highlighting swing states
+                line=dict(width=1, color='black')
+            ),
+            text=regular_country_names,
+            hoverinfo='text' if not highlight_swing_states else 'none',  # Disable hover info when invisible
+            hovertext=regular_hover_texts if not highlight_swing_states else None,
+            name='Regular Countries',
+            visible=True  # Keep trace in the figure even when invisible
+        ))
     
     # Add markers for geopolitical swing states (using hot colorscale like regular bubbles)
     fig.add_trace(go.Scattergeo(
@@ -560,6 +545,24 @@ tariff_range = st.sidebar.slider(
 with st.spinner("Generating map... This may take a moment."):
     map_fig = create_bubble_map(df, import_range[0], import_range[1], tariff_range[0], tariff_range[1], selected_countries, highlight_swing_states)
     st.plotly_chart(map_fig, use_container_width=True)
+
+st.markdown("""
+This interactive map visualizes US import data (2024) and tariff rates from the Liberation Day announcement for countries around the world:
+- **Bubble size**: Represents the total imports into the US from each country  (larger bubble = higher import value)
+- **Bubble color**: Represents the proposed tariff rate
+- **Country shading**: 
+  - China is shaded red
+  - United States is shaded blue
+  - Geopolitical swing states are shaded purple
+            
+Use the filters in the sidebar to explore different aspects of the US import data:
+- Filter by specific countries
+- Filter by import value range
+- Filter by tariff rate range
+- **Highlight Geopolitical Swing States**: When checked, this makes geopolitical swing states stand out by hiding non-swing states
+
+Hover over bubbles to see detailed information about each country, including the exact import value (in billions of USD), tariff rate, and geopolitical swing state status.
+""")
 
 # Display data table
 st.subheader("US Import Data")
