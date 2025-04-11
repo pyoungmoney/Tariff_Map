@@ -434,13 +434,7 @@ def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, se
             colorscale='Hot_r' if not highlight_swing_states else None,  # Use the reversed "Hot" colorscale only if not highlighting
             cmin=min_tariff if not highlight_swing_states else None,
             cmax=50 if not highlight_swing_states else None,
-            showscale=not highlight_swing_states,  # Only show colorscale if not highlighting
-            colorbar=dict(
-                title="Tariff Rate (%)",
-                thickness=15,
-                len=0.5,
-                y=0.5
-            ) if not highlight_swing_states else None,
+            showscale=False,  # Don't show colorscale for regular bubbles
             opacity=0.5 if highlight_swing_states else 0.7,  # Lower opacity if highlighting swing states
             line=dict(width=1, color='black')
         ),
@@ -471,6 +465,27 @@ def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, se
         name='Geopolitical Swing States'
     ))
     
+    # Add a standalone colorscale that's always visible
+    fig.add_trace(go.Scatter(
+        x=[None],
+        y=[None],
+        mode='markers',
+        marker=dict(
+            colorscale='Hot_r',
+            showscale=True,
+            cmin=min_tariff,
+            cmax=50,
+            colorbar=dict(
+                title="Tariff Rate (%)",
+                thickness=15,
+                len=0.5,
+                y=0.5
+            )
+        ),
+        hoverinfo='none',
+        showlegend=False
+    ))
+    
     # Update layout
     fig.update_layout(
         title=dict(
@@ -495,7 +510,11 @@ def create_bubble_map(data, min_imports, max_imports, min_tariff, max_tariff, se
             coastlinewidth=0.5
         ),
         height=700,
-        margin=dict(l=0, r=0, t=50, b=0)
+        margin=dict(l=0, r=0, t=50, b=0),
+        # Hide axes and gridlines
+        xaxis=dict(visible=False, showgrid=False),
+        yaxis=dict(visible=False, showgrid=False),
+        plot_bgcolor='rgba(0,0,0,0)'  # Transparent background
     )
     
     return fig
