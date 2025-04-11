@@ -12,7 +12,7 @@ st.set_page_config(
 )
 
 # Title and description
-st.title("US Imports and Liberation Day Tariff Rates")
+st.title("The Impact of Liberation Day Tariff Rates on Geopolitical Swing States")
 
 # Load the data
 @st.cache_data
@@ -521,7 +521,7 @@ selected_countries = st.sidebar.multiselect(
 )
 
 # Geopolitical swing state filter
-highlight_swing_states = st.sidebar.checkbox("Highlight Geopolitical Swing States", value=False)
+highlight_swing_states = st.sidebar.checkbox("Highlight Geopolitical Swing States", value=True)
 
 # Import value range filter
 min_imports = float(df['Imports ($B)'].min())
