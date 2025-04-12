@@ -521,7 +521,7 @@ selected_countries = st.sidebar.multiselect(
 )
 
 # Geopolitical swing state filter
-highlight_swing_states = st.sidebar.checkbox("Highlight Geopolitical Swing States", value=True)
+highlight_swing_states = st.sidebar.checkbox("Highlight Geopolitical Swing States", value=False)
 
 # Import value range filter
 min_imports = float(df['Imports ($B)'].min())
